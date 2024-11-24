@@ -26,7 +26,6 @@ async def on_message(message):
     save_message(message)
 
     if message.content.startswith('$play'):
-        await message.channel.send('$join')
         await message.channel.send('Hello')
 
     if message.content.startswith('$pause'):
@@ -60,7 +59,7 @@ async def join(ctx):
 
 
 @bot.command()
-async def leave(ctx):
+async def stop(ctx):
     if ctx.voice_client:
         await ctx.voice_client.disconnect()
         await ctx.send("Disconnected from the voice channel.")

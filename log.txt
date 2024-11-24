@@ -35,3 +35,6 @@ syktox $join
 syktox $play
 syktox $join
 syktox $leave
+syktox $play
+syktox $join
+syktox $leave
