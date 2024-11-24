@@ -22,23 +22,7 @@ async def on_ready():
 async def on_message(message):
     if message.author == bot.user:
         return
-
     save_message(message)
-
-    if message.content.startswith('$play'):
-        await message.channel.send('Hello')
-
-    if message.content.startswith('$pause'):
-        pass
-
-    if message.content.startswith('$resume'):
-        pass
-
-    if message.content.startswith('$skip'):
-        pass
-
-    if message.content.startswith('$stop'):
-        pass
     await bot.process_commands(message)
 
 
@@ -57,6 +41,9 @@ async def join(ctx):
     else:
         await ctx.send("You need to be in a voice channel for me to join!")
 
+@bot.command()
+async def play():
+    pass
 
 @bot.command()
 async def stop(ctx):
@@ -66,6 +53,17 @@ async def stop(ctx):
     else:
         await ctx.send("I'm not connected to a voice channel!")
 
+@bot.command()
+async def pause():
+    pass
+
+@bot.command()
+async def resume():
+    pass
+
+@bot.command()
+async def skip():
+    pass
 
 TOKEN = os.getenv('TOKEN')
 bot.run(TOKEN)
