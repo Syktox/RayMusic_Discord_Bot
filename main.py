@@ -26,7 +26,8 @@ async def on_message(message):
     save_message(message)
 
     if message.content.startswith('$play'):
-        await message.channel.send('Hello!')
+        await message.channel.send('$join')
+        await message.channel.send('Hello')
 
     if message.content.startswith('$pause'):
         pass
