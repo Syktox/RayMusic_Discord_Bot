@@ -1,8 +1,11 @@
+from re import search
+
 import discord
 import os
 from discord.ext import commands
 from dotenv import load_dotenv
 load_dotenv()
+from ytmusicapi import YTMusic
 
 def save_message(message):
     file = open('log.txt', 'a')
@@ -13,6 +16,8 @@ intents = discord.Intents.default()
 intents.voice_states=True
 intents.message_content=True
 bot = commands.Bot(command_prefix='$', intents=intents)
+music = YTMusic('oauth.json')
+
 
 @bot.event
 async def on_ready():
@@ -42,10 +47,6 @@ async def join(ctx):
         await ctx.send("You need to be in a voice channel for me to join!")
 
 @bot.command()
-async def play():
-    pass
-
-@bot.command()
 async def stop(ctx):
     if ctx.voice_client:
         await ctx.voice_client.disconnect()
@@ -53,17 +54,25 @@ async def stop(ctx):
     else:
         await ctx.send("I'm not connected to a voice channel!")
 
-@bot.command()
-async def pause():
-    pass
 
-@bot.command()
-async def resume():
-    pass
 
-@bot.command()
-async def skip():
-    pass
+# @bot.command()
+# async def play():
+#     pass
+#
+
+#
+# @bot.command()
+# async def pause():
+#     pass
+#
+# @bot.command()
+# async def resume():
+#     pass
+#
+# @bot.command()
+# async def skip():
+#     pass
 
 TOKEN = os.getenv('TOKEN')
 bot.run(TOKEN)
