@@ -22,6 +22,7 @@ music = YTMusic('oauth.json')
 @bot.event
 async def on_ready():
     print(f'We have logged in as {bot}')
+    
 
 @bot.event
 async def on_message(message):
@@ -39,12 +40,16 @@ async def join(ctx):
             try:
                 await channel.connect()
                 await ctx.send(f'Joined {channel.name}!')
+                return True
             except discord.ClientException as e:
                 await ctx.send(f"Error: {e}")
+                return False
         else:
             await ctx.send("I'm already connected to a voice channel!")
+            return False
     else:
         await ctx.send("You need to be in a voice channel for me to join!")
+        return False
 
 @bot.command()
 async def stop(ctx):
@@ -54,25 +59,15 @@ async def stop(ctx):
     else:
         await ctx.send("I'm not connected to a voice channel!")
 
+@bot.command()
+async def play(ctx):
+    pass
 
-
-# @bot.command()
-# async def play():
-#     pass
-#
-
-#
-# @bot.command()
-# async def pause():
-#     pass
-#
-# @bot.command()
-# async def resume():
-#     pass
-#
-# @bot.command()
-# async def skip():
-#     pass
+@bot.command()
+async def listen(ctx):
+    joined = await join(ctx)
+    if (joined):
+        print("Listening")
 
 TOKEN = os.getenv('TOKEN')
 bot.run(TOKEN)
