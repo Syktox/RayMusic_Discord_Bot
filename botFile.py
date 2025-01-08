@@ -1,10 +1,12 @@
-import discord
 import os
+
+import discord
 from discord.ext import commands
 from dotenv import load_dotenv
+
 load_dotenv()
 import yt_dlp
-import asyncio
+
 
 def save_message(message):
     file = open('log.txt', 'a')
@@ -12,14 +14,11 @@ def save_message(message):
     file.close()
 
 def run_bot():
-    TOKEN = os.getenv('TOKEN')
+    token = os.getenv('TOKEN')
     intents = discord.Intents.default()
     intents.voice_states=True
     intents.message_content=True
     bot = commands.Bot(command_prefix='$', intents=intents)
-
-    playlist = {}
-
 
     @bot.event
     async def on_message(message):
@@ -78,4 +77,4 @@ def run_bot():
         if (joined):
             print("Listening")
 
-    bot.run(TOKEN)
+    bot.run(token)
