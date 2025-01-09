@@ -1,11 +1,11 @@
 import os
 import datetime
 import subprocess
-from zipfile import error
 
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
+from EventHandler import *
 
 load_dotenv()
 import yt_dlp
@@ -15,7 +15,8 @@ def save_message(message):
     file.write(f'{message.author} {message.content}\n')
     file.close()
 
-show_new_member_message = True
+show_join_message = True
+show_leave_message = True
 
 def run_bot():
     token = os.getenv('TOKEN')
@@ -47,23 +48,37 @@ def run_bot():
 
     @bot.event
     async def on_member_join(ctx, member):
-        if show_new_member_message:
+        if show_join_message:
             channel = member.guild.system_channel
             if channel:
                 await channel.send(f"Hello {member.name}!")
 
-    @bot.command('change_member_message')
-    async def change_member_message(ctx, changed: bool):
-        try:
-            global show_new_member_message
-            show_new_member_message = changed
-            await ctx.send(f"Show new member message has been set to: {show_new_member_message}")
-        except:
-            await ctx.send("Error changing setting")
+    @bot.event
+    async def on_member_remove(ctx, member):
+        if show_leave_message:
+            channel = member.guild.system_channel
+            if channel:
+                await channel.send(f"Goodbye {member.name}")
 
-    @bot.command('check_member_message_status')
-    async def check_member_message_status(ctx):
-        await ctx.send(f"Show new member messages are set to: {show_new_member_message}")
+    @bot.command('change_join_message')
+    async def change_join_message(ctx, changed: bool):
+        global show_join_message
+        show_join_message = changed
+        await ctx.send(f"Show new member message has been set to: {show_join_message}")
+
+    @bot.command('change_leave_message')
+    async def change_leave_message(ctx, changed: bool):
+        global show_leave_message
+        show_leave_message = changed
+        await ctx.send(f"Leave message has been set to: {show_leave_message}")
+
+    @bot.command('check_join_message_status')
+    async def check_join_message_status(ctx):
+        await ctx.send(f"Join messages are set to: {show_join_message}")
+
+    @bot.command('check_leave_message_status')
+    async def check_leave_message_status(ctx):
+        await ctx.send(f"Leave message are set to: {show_leave_message}")
 
 
     @bot.command(name='join')
@@ -114,7 +129,7 @@ def run_bot():
     @bot.command()
     async def record(ctx):
         if ctx.voice_client and ctx.voice_client.is_connected():
-            ffmpeg_process = start_ffmpeg(ctx.voice_client)
+            ffmpeg_process = False  # need to be changed
             if ffmpeg_process:
                 await ctx.send("Recording started! Use `!stop` to stop recording.")
                 bot.ffmpeg_process = ffmpeg_process
@@ -130,33 +145,5 @@ def run_bot():
             await ctx.send("Recording stopp! Audio saved as `output.wav`.")
         else:
             await ctx.send("No active recording found.")
-
-    def start_ffmpeg(voice_client):
-        """Start ffmpeg process to capture raw audio from Discord"""
-        try:
-            # Define ffmpeg command to capture and save raw PCM to a WAV file
-            ffmpeg_command = [
-                "ffmpeg",
-                "-y",  # Overwrite output file if it exists
-                "-f", "s16le",  # Specify raw PCM input
-                "-ar", "48000",  # Audio sampling rate
-                "-ac", "2",  # Number of audio channels
-                "-i", "pipe:0",  # Read input from stdin (voice stream)
-                "output.wav"  # Save output as a WAV file
-            ]
-
-            # Start ffmpeg as a subprocess and pipe audio from Discord
-            ffmpeg_process = subprocess.Popen(
-                ffmpeg_command,
-                stdin=subprocess.PIPE
-            )
-
-            # Attach ffmpeg to the bot's audio stream
-            voice_client.listen(discord.PCMAudio(ffmpeg_process.stdin))
-            return ffmpeg_process
-        except Exception as e:
-            print(f"Failed to start ffmpeg: {e}")
-            return None
-
 
     bot.run(token)
