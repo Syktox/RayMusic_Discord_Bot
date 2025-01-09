@@ -1,22 +1,21 @@
 import os
 import datetime
-import subprocess
-
+import requests
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
-from EventHandler import *
+import yt_dlp
+import json
 
 load_dotenv()
-import yt_dlp
+
+show_join_message = True
+show_leave_message = True
 
 def save_message(message):
     file = open('log.txt', 'a')
     file.write(f'{message.author} {message.content}\n')
     file.close()
-
-show_join_message = True
-show_leave_message = True
 
 def run_bot():
     token = os.getenv('TOKEN')
@@ -80,8 +79,17 @@ def run_bot():
     async def check_leave_message_status(ctx):
         await ctx.send(f"Leave message are set to: {show_leave_message}")
 
+    @bot.command('joke')
+    async def joke(ctx):
+        joke_url = "https://jokes-always.p.rapidapi.com/family"
+        headers = {
+            "x-rapidapi-key": "26a2dd88d8msha7adc935319e071p1d680fjsna2c3a5194d08",
+            "x-rapidapi-host": "jokes-always.p.rapidapi.com"
+        }
+        response = requests.get(joke_url, headers=headers)
+        await ctx.send(json.loads(response.text)['data'])
 
-    @bot.command(name='join')
+    @bot.command('join')
     async def join(ctx):
         if ctx.author.voice:
             channel = ctx.author.voice.channel
