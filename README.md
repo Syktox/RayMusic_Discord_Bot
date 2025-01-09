@@ -1,4 +1,4 @@
-## It will only be added to the Discord server RAYSIX! \newline There are no exceptions atleast for now
+## It will only be added to the Discord server RAYSIX! <br /> There are no exceptions atleast for now
 
 #### Implemented functions and commands:
 
