@@ -2,7 +2,9 @@
 
 #### Implemented functions and commands:
 
-- change_member_message: It changes if the Welcome Message will be sent or not (usually True)
-- check_member_message_status: Shows the current state of the Welcome Message to new members
+- change_join_message: Changes the message if a person joins the Discord (set to True)
+- change_leave_message: Changes the message if a person leave the Discord (set to True)
+- check_join_message_status: Shows the current state of the join message
+- check_leave_message_status: Shows the current state of the leave message
   
 Will be continued!
