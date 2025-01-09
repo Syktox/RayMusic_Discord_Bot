@@ -24,6 +24,14 @@ def run_bot():
     intents.message_content=True
     bot = commands.Bot(command_prefix='$', intents=intents)
 
+    @bot.event
+    async def on_command_error(ctx, error):
+        if isinstance(error, commands.CommandNotFound):
+            await ctx.send(f"Command not found!")
+        elif isinstance(error, discord.ext.commands.errors.BadBoolArgument):
+            await ctx.send(f"Wrong Input! You should use True or False")
+        else:
+            raise error
 
     @bot.event
     async def on_ready():
