@@ -1,5 +1,5 @@
 import os
-
+import datetime
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
@@ -21,12 +21,16 @@ def run_bot():
     bot = commands.Bot(command_prefix='$', intents=intents)
 
     @bot.event
+    async def on_ready():
+        print(f"Logged in as {bot.user.name} "
+              f"at {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}")
+
+    @bot.event
     async def on_message(message):
         if message.author == bot.user:
             return
         save_message(message)
         await bot.process_commands(message)
-
 
     @bot.command(name='join')
     async def join(ctx):
@@ -57,8 +61,10 @@ def run_bot():
 
     @bot.command(name='play')
     async def play(ctx, link):
+
+        await join(ctx)
+
         voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
-        voice_clinet = bot.voice_clients
         if not voice_client:
             await ctx.send("The bot is not connected to a voice channel!")
             return
@@ -71,10 +77,11 @@ def run_bot():
         source = await discord.FFmpegOpusAudio.from_probe(audio_url)
         voice_client.play(source)
 
+    # other functionality should be used to record voice
     @bot.command()
     async def listen(ctx):
         joined = await join(ctx)
-        if (joined):
+        if joined:
             print("Listening")
 
     bot.run(token)
