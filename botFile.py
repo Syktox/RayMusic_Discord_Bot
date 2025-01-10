@@ -118,7 +118,11 @@ def run_bot():
 
     @bot.command(name='play')
     async def play(ctx, link):
-        await join(ctx)
+        if ctx.author.voice:
+            channel = ctx.author.voice.channel
+            await channel.connect()
+        else:
+            ctx.send(f"You aren't in a voice channel")
 
         voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
         if not voice_client:
@@ -134,7 +138,7 @@ def run_bot():
         voice_client.play(source)
 
     # other functionality should be used to record voice
-    @bot.command()
+    @bot.command(pass_content = True)
     async def record(ctx):
         if ctx.voice_client and ctx.voice_client.is_connected():
             ffmpeg_process = False  # need to be changed
