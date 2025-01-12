@@ -112,9 +112,6 @@ def run_bot():
     async def leave(ctx):
         if ctx.voice_client:
             await ctx.voice_client.disconnect()
-            await ctx.send("Disconnected from the voice channel.")
-        else:
-            await ctx.send("I'm not connected to a voice channel!")
 
     @bot.command(name='play')
     async def play(ctx, link):
@@ -157,5 +154,21 @@ def run_bot():
             await ctx.send("Recording stopp! Audio saved as `output.wav`.")
         else:
             await ctx.send("No active recording found.")
+
+    @bot.command('pause')
+    async def pause(ctx):
+        voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
+        if voice.is_playing():
+            voice.pause()
+        else:
+            ctx.send("There is no audio playing")
+
+    @bot.command('resume')
+    async def resume(ctx):
+        voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
+        if voice.is_paused():
+            voice.resume()
+        else:
+            ctx.send("No audio is paused")
 
     bot.run(token)
