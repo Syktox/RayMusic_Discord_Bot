@@ -171,4 +171,13 @@ def run_bot():
         else:
             ctx.send("No audio is paused")
 
+    @bot.command('playNext')
+    async def playNext(ctx, link):
+        pass
+
+    @bot.command('clearPl')
+    async def clearPl(ctx):
+        pass
+
+
     bot.run(token)
