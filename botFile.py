@@ -1,16 +1,15 @@
 import os
 import datetime
-import requests
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 import yt_dlp
-import json
 
 load_dotenv()
 
 show_join_message = True
 show_leave_message = True
+playlist = []
 
 def save_message(message):
     file = open('log.txt', 'a')
@@ -44,50 +43,6 @@ def run_bot():
             return
         save_message(message)
         await bot.process_commands(message)
-
-    @bot.event
-    async def on_member_join(ctx, member):
-        if show_join_message:
-            channel = member.guild.system_channel
-            if channel:
-                await channel.send(f"Hello {member.name}!")
-
-    @bot.event
-    async def on_member_remove(ctx, member):
-        if show_leave_message:
-            channel = member.guild.system_channel
-            if channel:
-                await channel.send(f"Goodbye {member.name}")
-
-    @bot.command('change_join_message')
-    async def change_join_message(ctx, changed: bool):
-        global show_join_message
-        show_join_message = changed
-        await ctx.send(f"Show new member message has been set to: {show_join_message}")
-
-    @bot.command('change_leave_message')
-    async def change_leave_message(ctx, changed: bool):
-        global show_leave_message
-        show_leave_message = changed
-        await ctx.send(f"Leave message has been set to: {show_leave_message}")
-
-    @bot.command('check_join_message_status')
-    async def check_join_message_status(ctx):
-        await ctx.send(f"Join messages are set to: {show_join_message}")
-
-    @bot.command('check_leave_message_status')
-    async def check_leave_message_status(ctx):
-        await ctx.send(f"Leave message are set to: {show_leave_message}")
-
-    @bot.command('joke')
-    async def joke(ctx):
-        joke_url = "https://jokes-always.p.rapidapi.com/family"
-        headers = {
-            "x-rapidapi-key": "26a2dd88d8msha7adc935319e071p1d680fjsna2c3a5194d08",
-            "x-rapidapi-host": "jokes-always.p.rapidapi.com"
-        }
-        response = requests.get(joke_url, headers=headers)
-        await ctx.send(json.loads(response.text)['data'])
 
     @bot.command('join')
     async def join(ctx):
