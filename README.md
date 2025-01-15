@@ -9,7 +9,7 @@
 - stop
 - pause
 - resume
-- playNext
+- skip
 - clearPl
   
 Will be continued!

@@ -2,7 +2,6 @@ import os
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
-
 import EventHandler
 import BotCommands
 
@@ -26,7 +25,7 @@ def run_bot():
     
     for command_name in dir(BotCommands):
         command_func = getattr(BotCommands, command_name)
-        if isinstance(command_name, commands.Command):
-            bot.command(command_func)
+        if isinstance(command_func, commands.Command):
+            bot.add_command(command_func)
 
     bot.run(token)

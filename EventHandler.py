@@ -14,6 +14,8 @@ async def on_command_error(ctx, error):
         await ctx.send(f"Command not found!")
     elif isinstance(error, discord.ext.commands.errors.BadBoolArgument):
         await ctx.send(f"Wrong Input! You should use True or False")
+    elif isinstance(error, discord.errors.ClientException):
+        await ctx.send("ClientException")
     else:
         raise error
 
