@@ -1,122 +1,90 @@
 import discord
 from discord.ext import commands
-import yt_dlp
+import youtube_dl
+import spotipy
+from spotipy.oauth2 import SpotifyClientCredentials
+import asyncio
+import os
 
-bot = None
-queues = {}
+# Configure Spotify API
+SPOTIFY_CLIENT_ID = "4506e5a4f4444c6db229325b3b1a2425"
+SPOTIFY_CLIENT_SECRET = "136b75613302468bac61e37f246b29c5"
 
-def play_next_in_queue(ctx, voice_client, guild_id):
-    if guild_id in queues and queues[guild_id]:
-        source = queues[guild_id].pop(0)
-        voice_client.play(
-            source,
-            after=lambda e: play_next_in_queue(ctx, voice_client, guild_id)
-        )
-    else:
-        queues.pop(guild_id, None)
+sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
+    client_id=SPOTIFY_CLIENT_ID, client_secret=SPOTIFY_CLIENT_SECRET
+))
 
-@commands.command('join')
+voice_clients = {}
+
+@commands.command(name="join")
 async def join(ctx):
     if ctx.author.voice:
         channel = ctx.author.voice.channel
-        if ctx.voice_client is None:
-            try:
-                await channel.connect()
-                await ctx.send(f'Joined {channel.name}!')
-            except discord.ClientException as e:
-                await ctx.send(f"Error: {e}")
-        else:
-            await ctx.send("I'm already connected to a voice channel!")
+        voice_clients[ctx.guild.id] = await channel.connect()
     else:
-        await ctx.send("You need to be in a voice channel for me to join!")
+        await ctx.send("You need to be in a voice channel to use this command.")
 
-@commands.command(name='leave')
+@commands.command(name="leave")
 async def leave(ctx):
-    if ctx.voice_client:
-        await ctx.voice_client.disconnect()
+    if ctx.guild.id in voice_clients:
+        await voice_clients[ctx.guild.id].disconnect()
+        del voice_clients[ctx.guild.id]
+    else:
+        await ctx.send("I'm not in a voice channel.")
 
-@commands.command(name='play')  #error here
-async def play(ctx, link):
-    voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
-    if not voice_client:
-        await ctx.send("The bot is not connected to a voice channel!")
-        return
-    try:
-        ydl_opts = {
-            'format': 'bestaudio',
-            'noplaylist': True,
-            'extract_flat': False,
-            'quiet': False,
-            'force_generic_extractor': False,
-        }
-        
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(link, download=False)
-            audio_url = info['url']
-            
-    except Exception as e:
-        await ctx.send(f"Fehler beim Abrufen des Links: {str(e)}")
-        return
+@commands.command(name="play")
+async def play(ctx, *, query):
+    if ctx.guild.id not in voice_clients:
+        await join(ctx)
 
-    try:
-        source = discord.FFmpegOpusAudio(audio_url, 
-                                        before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
-                                        options="-vn")
-    except Exception as e:
-        await ctx.send(f"Error creating audio source: {str(e)}")
-        return
+    voice_client = voice_clients[ctx.guild.id]
     
-    guild_id = ctx.guild.id
-    if guild_id in queues:
-        queues[guild_id].append(source)
-        await ctx.send(f"Added to queue! Current rank: {queues.qsize}")
-    else:
-        queues[guild_id] = [source]
-        await ctx.send("Playing now!")
-        play_next_in_queue(ctx, voice_client, guild_id)
-
-@commands.command(pass_content = True)
-async def record(ctx):
-    if ctx.voice_client and ctx.voice_client.is_connected():
-        ffmpeg_process = False  # need to be changed
-        if ffmpeg_process:
-            await ctx.send("Recording started! Use `!stop` to stop recording.")
-            bot.ffmpeg_process = ffmpeg_process
+    if "open.spotify.com" in query:
+        if "track" in query:
+            results = sp.track(query)
+            query = results['name'] + " " + results['artists'][0]['name']
         else:
-            await ctx.send("Failed to start recording.")
-    else:
-        await ctx.send("I am not connected to a voice channel!")
+            await ctx.send("Only Spotify track links are supported.")
+            return
 
-@commands.command('stop')
-async def stop(ctx):
-    if hasattr(bot, "ffmpeg_process"):
-        bot.ffmpeg_process.terminate()
-        await ctx.send("Recording stopp! Audio saved as `output.wav`.")
-    else:
-        await ctx.send("No active recording found.")
+    ydl_opts = {
+        'format': 'bestaudio/best',
+        'quiet': True,
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }],
+        'outtmpl': 'song.mp3',
+    }
 
-@commands.command('pause')
+    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(f"ytsearch:{query}", download=True)
+        url = info['entries'][0]['webpage_url']
+
+    voice_client.stop()
+    voice_client.play(discord.FFmpegPCMAudio("song.mp3"), after=lambda e: os.remove("song.mp3"))
+    await ctx.send(f"Now playing: {query}")
+
+@commands.command(name="pause")
 async def pause(ctx):
-    voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
-    if voice.is_playing():
-        voice.pause()
+    if ctx.guild.id in voice_clients and voice_clients[ctx.guild.id].is_playing():
+        voice_clients[ctx.guild.id].pause()
     else:
-        ctx.send("There is no audio playing")
+        await ctx.send("No music is currently playing.")
 
-@commands.command('resume')
+@commands.command(name="resume")
 async def resume(ctx):
-    voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
-    if voice.is_paused():
-        voice.resume()
+    if ctx.guild.id in voice_clients and voice_clients[ctx.guild.id].is_paused():
+        voice_clients[ctx.guild.id].resume()
     else:
-        ctx.send("No audio is paused")
+        await ctx.send("No music is currently paused.")
 
-@commands.command('skip')
-async def skip(ctx):
-    ctx.voice_client.stop()
-    play_next_in_queue(ctx, ctx.guild.voice_client, ctx.guild.id)
+# Stop the music
+@commands.command(name="stop")
+async def stop(ctx):
+    if ctx.guild.id in voice_clients:
+        voice_clients[ctx.guild.id].stop()
+    else:
+        await ctx.send("No music is currently playing.")
 
-@commands.command('clearPl')
-async def clearPl(ctx):
-    queues.clear()
-    ctx.voice_client.stop()
